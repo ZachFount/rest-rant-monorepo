@@ -4,13 +4,9 @@ import CommentCard from './CommentCard'
 import NewCommentForm from "./NewCommentForm";
 
 function PlaceDetails() {
-
 	const { placeId } = useParams()
-
 	const history = useHistory()
-
 	const [place, setPlace] = useState(null)
-
 	useEffect(() => {
 		const fetchData = async () => {
 			const response = await fetch(`http://localhost:5000/places/${placeId}`)
@@ -35,10 +31,15 @@ function PlaceDetails() {
 		history.push('/places')
 	}
 
-	async function deleteComment(deletedComment) {
-		await fetch(`http://localhost:5000/places/${place.placeId}/comments/${deletedComment.commentId}`, {
-			method: 'DELETE'
-		})
+async function deleteComment(deletedComment) {
+    const response = await fetch(`http://localhost:5000/places/${place.placeId}/comments/${deletedComment.commentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(commentAttributes)
+    })
 
 		setPlace({
 			...place,
@@ -51,7 +52,8 @@ function PlaceDetails() {
 		const response = await fetch(`http://localhost:5000/places/${place.placeId}/comments`, {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json'
+				'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(commentAttributes)
 		})
@@ -67,8 +69,6 @@ function PlaceDetails() {
 		})
 
 	}
-
-
 
 	let comments = (
 		<h3 className="inactive">
@@ -101,6 +101,20 @@ function PlaceDetails() {
 		})
 	}
 
+	let placeActions = null
+
+if (currentUser?.role === 'admin') {
+placeActions = (
+	<>
+		<a className="btn btn-warning" onClick={editPlace}>
+			Edit
+		</a>
+		<button type="submit" className="btn btn-danger" onClick={deletePlace}>
+			Delete
+		</button>
+	</>
+)
+}
 
 	return (
 		<main>

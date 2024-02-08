@@ -1,12 +1,18 @@
 'use strict';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.addColumn('users', 'password_digest', {
-      type: Sequelize.DataTypes.STRING
-    })
+    return queryInterface.addColumn('users', 'role', {
+        type: Sequelize.DataTypes.ENUM,
+        values: [
+          'reviewer',
+          'admin',
+        ],
+        defaultValue: 'reviewer'
+      })
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.removeColumn('users', 'password_digest')
+    return queryInterface.removeColumn('users', 'role')
   }
 };

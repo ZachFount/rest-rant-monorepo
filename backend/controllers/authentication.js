@@ -1,17 +1,40 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+const router = require('express').Router()
+const db = require("../models")
+const bcrypt = require('bcrypt')
+const jwt = require('json-web-token')
 
+const { User } = db
 
-exports.getCurrentUser = async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).send({ message: "No token provided" });
-  }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id); 
-    res.json({ user: { id: user.id, username: user.username } });
-  } catch (error) {
-    res.status(403).send({ message: "Invalid or expired token" });
-  }
-};
+router.post('/', async (req, res) => {
+
+    let user = await User.findOne({
+        where: { email: req.body.email }
+    })
+
+    if (!user || !await bcrypt.compare(req.body.password, user.passwordDigest)) {
+        res.status(404).json({ message: `Could not find a user with the provided username and password` })
+    } else {
+        const result = await jwt.encode(process.env.JWT_SECRET, { id: user.userId })           
+    res.json({ user: user, token: result.value })
+    }
+})
+___
+router.get('/profile', async (req, res) => {
+    try {
+        const [authenticationMethod, token] = req.headers.authorization.split(' ')
+        if (authenticationMethod == 'Bearer') {
+            const result = await jwt.decode(process.env.JWT_SECRET, token)
+            const { id } = result.value
+            let user = await User.findOne({
+                where: {
+                    userId: id
+                }
+            })
+            res.json(user)
+        }
+    } catch {
+        res.json(null)
+    }
+})
+
+module.exports = router
